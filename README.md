@@ -1,4 +1,33 @@
 pykimuracore
 ============
 
-This should be an implementation of some of Motoo Kimura's population genetic theory in Cython.
+This should be an implementation of some of Motoo Kimura's
+population genetic theory in Cython.
+
+
+Requirements
+------------
+
+ * [Python](http://python.org/) 2.7+ (but it is not tested on 3.x)
+ * [NumPy](http://www.numpy.org/)
+ * a computing environment that knows how to compile C code
+
+
+Installation
+------------
+
+The easiest way to install this module is to use
+[pip](http://www.pip-installer.org/)
+to install directly from github.
+
+`pip install --user https://github.com/argriffing/pykimuracore/zipball/master`
+
+This does not not require administrator privileges,
+and it can be easily reverted using the command
+
+`pip uninstall pykimuracore`
+
+The installation should be very easy with Linux-based operating systems,
+more difficult with OS X,
+and probably not worth attempting on Windows.
+
