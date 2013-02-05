@@ -10,6 +10,7 @@ $ gcc -shared -pthread -fPIC -fwrapv -O2 -Wall -fno-strict-aliasing \
       -I/usr/include/python2.7 -o kimengine.so kimengine.c
 """
 
+from cython.view cimport array as cvarray
 import numpy as np
 cimport numpy as np
 cimport cython
@@ -204,10 +205,10 @@ cdef double _kimura_integral_scalar(double c, double d) nogil:
 @cython.wraparound(False)
 @cython.cdivision(True)
 def kimura_integral_2d_masked_inplace(
-        np.ndarray[np.float64_t, ndim=2] C,
-        np.ndarray[np.float64_t, ndim=2] D,
-        np.ndarray[np.int_t, ndim=2] M,
-        np.ndarray[np.float64_t, ndim=2] out,
+        np.float64_t [:, :] C,
+        np.float64_t [:, :] D,
+        np.int_t [:, :] M,
+        np.float64_t [:, :] out,
         ):
     """
     Give up on writing ufuncs and instead use ndarrays with explicit ndim.
@@ -221,8 +222,6 @@ def kimura_integral_2d_masked_inplace(
     """
     cdef int n = C.shape[0]
     cdef int k = C.shape[1]
-    cdef int i = 0
-    cdef int j = 0
     for i in range(n):
         for j in range(k):
             if M[i, j] != 0:
