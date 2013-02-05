@@ -2,12 +2,6 @@
 Fast functions for Kimura integrals.
 
 This is related to population genetics.
-For compilation instructions see
-http://docs.cython.org/src/reference/compilation.html
-For example:
-$ cython -a kimengine.pyx
-$ gcc -shared -pthread -fPIC -fwrapv -O2 -Wall -fno-strict-aliasing \
-      -I/usr/include/python2.7 -o kimengine.so kimengine.c
 """
 
 from cython.view cimport array as cvarray
