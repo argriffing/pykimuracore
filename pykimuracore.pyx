@@ -10,7 +10,15 @@ cimport numpy as np
 cimport cython
 from libc.math cimport log, exp
 
+try:
+    from pytpcore import tp_zero, tp_mul_scalar
+    from pytpcore import tp_accum_scalar, tp_amul_scalar
+    from pytpcore import tp_mul, tp_exp, tp_reciprocal
+except ImportError:
+    pytpcore = None
+
 np.import_array()
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
@@ -221,4 +229,70 @@ def kimura_integral_2d_masked_inplace(
             if M[i, j] != 0:
                 out[i, j] = _kimura_integral_scalar(C[i, j], D[i, j])
     return out
+
+
+def kimura_algopy(
+        np.float64_t [:] quad_points,
+        np.float64_t [:] quad_weights,
+        np.float64_t [:, :] selection,
+        np.float64_t [:, :] kimura_d,
+        np.float64_t [:, :] tmp_a,
+        np.float64_t [:, :] tmp_b,
+        np.float64_t [:, :] tmp_c,
+        np.float64_t [:, :] out,
+        ):
+    """
+    Compute derivatives through a gaussian quadrature.
+    Disregard the codon adjacency structure.
+    @param quad_points: points for quadrature
+    @param quad_weights: weights for quadrature
+    @param selection: a reshaped algopy UTPM ndarray of selection differences
+    @param kimura_d: a reshaped algopy UTPM ndarray of dominance parameters
+    @param tmp_a: a meaningless buffer shaped like the output ndarray
+    @param tmp_b: a meaningless buffer shaped like the output ndarray
+    @param tmp_c: a meaningless buffer shaped like the output ndarray
+    @param out: a reshaped output algopy UTPM ndarray of fixation rates
+    """
+
+    cdef long nknots = quad_points.shape[0]
+    cdef long k
+
+    K = quad_points.shape[0]
+    if quad_weights.shape[0] != K:
+        raise Exception
+
+    D = selection.shape[0]
+    N = selection.shape[1]
+    for arr in (kimura_d, tmp_a, tmp_b, tmp_c, out):
+        if arr.shape[0] != D:
+            raise Exception
+        if arr.shape[1] != N:
+            raise Exception
+
+    # out = 0
+    tp_zero(out)
+
+    # loop over the quadrature points
+    for k in range(nknots):
+
+        # a = selection * (-x)
+        tp_mul_scalar(selection, -quad_points[k], tmp_a)
+
+        # b = kimura_d * (1-x)
+        tp_mul_scalar(kimura_d, 1.0-quad_points[k], tmp_b)
+
+        # b += 1
+        tp_accum_scalar(1.0, tmp_b)
+        
+        # c = a*b
+        tp_mul(tmp_a, tmp_b, tmp_c)
+
+        # b = exp(c)
+        tp_exp(tmp_c, tmp_a, tmp_b)
+
+        # a = 1 / b
+        tp_reciprocal(tmp_b, tmp_a)
+
+        # out += a * weight
+        tp_amul_scalar(tmp_a, quad_weights[k], out)
 
